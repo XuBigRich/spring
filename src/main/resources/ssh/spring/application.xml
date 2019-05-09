@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd  http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <context:property-placeholder location="classpath:ssh/jdbc.properties"/>
+    <!--声明自动为spring容器中那些配置aspectj切面的beanc创建代理，织入切面/-->
+    <aop:aspectj-autoproxy/>
+    <!-- 启动包扫描功能，以便注册所有注解使带有@controller、@Service、@top.piao888.repository、@Component等注解的类成为spring的bean,只有这样，程序中的注解才能发挥作用-->
+    <context:component-scan base-package="top.piao888.ssh.*">
+        <!--扫描包下所有注解 除了Controller注解（Controller注解在spring-mvc中起作用）-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+   <!-- <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        &lt;!&ndash;每5小时检查所有连接池中的空闲连接。防止mysql wait_timeout（默认的为8小时） &ndash;&gt;
+        <property name="idleConnectionTestPeriod" value="${jdbc.c3p0.idleConnectionTestPeriod}"/>
+    </bean>-->
+    <bean id="dataSource2" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+        <property name="username" value="scott"/>
+        <property name="password"  value="tiger"/>
+        <property name="driverClassName"  value="oracle.jdbc.driver.OracleDriver"/>
+    </bean>
+    <bean id="sessionFactory1" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource2"/>
+        <!--使用packagesToScan属性告诉Spring扫描一个或多个包以查找域类，
+        这些类通过注解的方式表明要使用Hibernate进行持久化，
+        这些类可以使用的注解包括JPA的@Entity或@MappedSuperclass以及Hibernate的@Entity。-->
+        <property name="packagesToScan">
+            <list>
+                <!-- 可以加多个包 有注解的javaBean 类所存在的包  -->
+                <value>top.piao888.ssh.pojo</value>
+            </list>
+        </property>
+        <property name="hibernateProperties">
+        <props>
+            <prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop>
+            <prop key="hibernate.hbm2ddl.auto">update</prop>
+            <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+            <prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+            <prop key="current_session_context_class">thread</prop>
+            <prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
+            <prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate5.SpringSessionContext</prop>
+        </props>
+        </property>
+    </bean>
+    <!--<start id="bean_exception_translation_post_processor" />-->
+    <!--<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>-->
+    <!--<end id="bean_exception_translation_post_processor" />-->
+
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory1" />
+    </bean>
+    <!--使用名为transactionManager的事务管理器去管理事务-->
+    <tx:advice id="txadvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--描述什么样的方法对应什么样的处理规则-->
+            <tx:method name="get*" read-only="true" propagation="REQUIRED"/>
+            <tx:method name="list*" read-only="true" propagation="REQUIRED"/>
+            <tx:method name="find*" read-only="true" propagation="REQUIRED"/>
+            <!--声明事务发生异常后会回滚-->
+            <tx:method name="*" propagation="REQUIRED" rollback-for="Exception"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config proxy-target-class="true">
+        <!--所有public方法 无论什么返回值,service包下面以Service结尾的 类的所有方法参数任意（..）代表任意-->
+        <!--指定execution类型的方法在引用时会引用txadvice-->
+        <aop:advisor pointcut="execution(public * top.piao888.ssh.service.*Service.*(..))" advice-ref="txadvice"/>
+    </aop:config>
+
+    <!--==============================================================-->
+    <!--<bean id="exporter"
+          class="org.springframework.jmx.export.MBeanExporter"
+          lazy-init="false">
+        <property name="beans">
+            <map>
+                <entry key="hibernate:name=statisticsService"
+                       value-ref="statisticsService" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="statisticsService"
+          class="org.hibernate.jmx.StatisticsService">
+        <property name="sessionFactory">
+            <ref bean="sessionFactory" />
+        </property>
+    </bean>-->
+</beans>

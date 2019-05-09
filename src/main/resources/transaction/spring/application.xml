@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--spring 最全约束文档-->
+<beans  xmlns="http://www.springframework.org/schema/beans"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd ">
+    <bean id="DataSource1" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <!-- 基本属性 url、user、password -->
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/account?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=GMT%2B8" />
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="username" value="root" />
+        <property name="password" value="root" />
+        <property name="timeBetweenLogStatsMillis" value="300000" />
+
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="1" />
+        <property name="minIdle" value="1" />
+        <property name="maxActive" value="20" />
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="60000" />
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000" />
+
+        <property name="validationQuery" value="SELECT 'x'" />
+        <property name="testWhileIdle" value="true" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="false" />
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="20" />
+    </bean>
+    <bean id="jdbcTemplate1" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="DataSource1"/>
+    </bean>
+    <!--配置事务管理器-->
+    <bean id="transactionManager1" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="DataSource1"/>
+    </bean>
+
+<!--=================================================================================================-->
+    <!-- 一、--> <!--编程式事务管理-->
+<!--=================================================================================================-->
+    <!--配置持久层-->
+    <bean id="accountDao" class="top.piao888.spring_transaction.Dao.impl.AccountDaoimpl"/>
+    <!--事务管理模板-->
+    <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+        <property name="transactionManager" ref="transactionManager1"/>
+    </bean>
+    <!--配置业务层类-->
+    <bean id="accountService" class="top.piao888.spring_transaction.service.impl.AccountServiceimpl">
+        <property name="accountDao" ref="accountDao"/>
+        <property name="transactionTemplate" ref="transactionTemplate"/>
+    </bean>
+
+<!--=================================================================================================-->
+    <!-- 二、--> <!--声明式事务管理   原理aop-->
+                <!--1.使用原始TransactionProxyFactoryBean方式-->
+<!--=================================================================================================-->
+   <!--配置 业务层-->
+    <bean id="accountService2" class="top.piao888.spring_transaction.service.impl.AccountServiceimpl2">
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+    <!--配置业务层代理  由他直接 注入到Controller的 accountService2 引用中去-->
+    <bean id="accountService2Proxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+        <!--配置 目标对象 （要增强的类）-->
+        <property name="target" ref="accountService2"/>
+        <!--注入事务管理器-->
+        <property name="transactionManager" ref="transactionManager1"/>
+        <!--注入事务的属性-->
+        <property name="transactionAttributes">
+            <props>
+                <!--
+                * PROPAGATION ：事务传播行为
+                * ISOLATION   ：事务隔离级别
+                * readOnly    ：只读
+                * -Exception  ：发生那些异常事务回滚
+                * +Exception  ：发生那些异常事务不回滚
+                -->
+                <prop key="*">PROPAGATION_REQUIRED</prop>
+                <!--可以为多参数-->
+                <!--<prop key="*">PROPAGATION_REQUIRED,-ArithmeticException,readOnly</prop>-->
+            </props>
+        </property>
+    </bean>
+<!--=================================================================================================-->
+    <!--2.使用XML配置声明式事务管理 基于tx/aop-->
+<!--=================================================================================================-->
+    <bean id="accountService3" class="top.piao888.spring_transaction.service.impl.AccountServiceimpl3">
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+
+    <!--配置事务的通知:(事务的增强)-->
+    <tx:advice id="txadvice1" transaction-manager="transactionManager1">
+        <tx:attributes>
+            <!--
+                propagation :事务传播行为
+                isolation   :事务隔离级别
+                read-only   :是否只读
+                rollback-for:发生哪些异常回滚
+                no-rollback-for:发生哪些异常不回滚
+                timeout     :过期信息
+            -->
+            <tx:method name="*" propagation="REQUIRED" isolation="DEFAULT" read-only="false" rollback-for="" no-rollback-for=""  timeout="-1"/>
+        </tx:attributes>
+    </tx:advice>
+    <!--配置AOP 切面-->
+    <aop:config>
+        <!--配置切入点-->
+        <aop:pointcut id="pointcut1" expression="execution( * top.piao888.spring_transaction.service.impl.AccountServiceimpl3.*(..))"/>
+        <!--配置切面-->
+        <!--一个切点 一个通知-->  <!-- 这里的通知类似于 切入后事务的规范 或 增强的规范 -->
+        <aop:advisor advice-ref="txadvice1" pointcut-ref="pointcut1"/>
+        <!--多个切点 多个通知-->
+        <aop:aspect/>
+    </aop:config>
+<!--=================================================================================================-->
+    <!--3.基于注解的事务管理方式-->
+<!--=================================================================================================-->
+    <bean id="accountService4" class="top.piao888.spring_transaction.service.impl.AccountServiceimpl4">
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+    <!--开启注解事务-->
+    <tx:annotation-driven transaction-manager="transactionManager1"/>
+
+<!--=================================================================================================-->
+    <!--2.1 基于注解的AOP事务管理方式-->
+<!--=================================================================================================-->
+    <bean id="accountService5" class="top.piao888.spring_transaction.service.impl.AccountServiceimpl5">
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+    <bean id="transactionTemplate5" class="org.springframework.transaction.support.TransactionTemplate">
+        <property name="transactionManager" ref="transactionManager1"/>
+    </bean>
+    <context:component-scan base-package="top.piao888.spring_transaction.service.impl"/>
+</beans>

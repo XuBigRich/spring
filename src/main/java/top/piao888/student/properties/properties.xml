@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+<!--效果与下方一样-->
+    <context:property-placeholder location="classpath*:student/properties/aaa.properties" ignore-unresolvable="true" ignore-resource-not-found="true"/>
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
+    <property name="ignoreResourceNotFound" value="true"/>
+    <property name="locations">
+    <list>
+        <!--
+         file:加载非编译类的文件系统，即：作为 URL 从文件系统中加载。
+         classpath:加载编译的class文件系统，即：从classpath中加载。
+        -->
+    <value>classpath*:student/properties/aaa.properties</value>
+    <!--<value>file:src/main/assembly/config/develop/aaa.properties</value>-->
+    </list>
+    </property>
+    </bean>
+</beans>
