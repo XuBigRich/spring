@@ -19,7 +19,7 @@ public class AccountServiceimpl5 implements AccountService {
 
     public void transfer(final String out,final String in,final Double money) {
         accountDao.outMoney(out,money);
-        int i=1/0;            //人工 制造 异常 。  测试 添加事务管理后 是否会 会回滚事务
+//        int i=1/0;            //人工 制造 异常 。  测试 添加事务管理后 是否会 会回滚事务
         accountDao.inMoney(in,money);
     }
 

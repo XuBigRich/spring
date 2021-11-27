@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 public class TransactionConturller {
     @Autowired
     private AccountService accountService;
-    @Resource(name="accountService2Proxy")
+    @Resource(name = "accountService2Proxy")
     private AccountService accountService2;
     @Autowired
     private AccountService accountService3;
@@ -29,26 +29,39 @@ public class TransactionConturller {
     private AccountService accountService4;
     @Autowired
     private AccountService accountService5;
+    @Autowired
+    private AccountService accountService6;
+
     @GetMapping("/account")
-    public void account(@RequestParam("out") String out,@RequestParam("in") String in,@RequestParam("money") Double money){
-        accountService.transfer(out,in,money);
+    public void account(@RequestParam("out") String out, @RequestParam("in") String in, @RequestParam("money") Double money) {
+        accountService.transfer(out, in, money);
     }
+
     @GetMapping("/account2")
-    public void account2(@RequestParam("out") String out,@RequestParam("in") String in,@RequestParam("money") Double money){
-        accountService2.transfer(out,in,money);
+    public void account2(@RequestParam("out") String out, @RequestParam("in") String in, @RequestParam("money") Double money) {
+        accountService2.transfer(out, in, money);
     }
+
     @GetMapping("/account3")
-    public void account3(@RequestParam("out") String out,@RequestParam("in") String in,@RequestParam("money") Double money){
-        accountService3.transfer(out,in,money);
+    public void account3(@RequestParam("out") String out, @RequestParam("in") String in, @RequestParam("money") Double money) {
+        accountService3.transfer(out, in, money);
     }
+
     @GetMapping("/account4")
-    public void account4(@RequestParam("out") String out,@RequestParam("in") String in,@RequestParam("money") Double money){
-        accountService4.transfer(out,in,money);
+    public void account4(@RequestParam("out") String out, @RequestParam("in") String in, @RequestParam("money") Double money) {
+        accountService4.transfer(out, in, money);
     }
+
     @GetMapping("/account5")
-    public void account5(@RequestParam("out") String out,@RequestParam("in") String in,@RequestParam("money") Double money){
-        accountService5.transfer(out,in,money);
+    public void account5(@RequestParam("out") String out, @RequestParam("in") String in, @RequestParam("money") Double money) {
+        accountService5.transfer(out, in, money);
     }
+
+    @GetMapping("/account6")
+    public void account6(@RequestParam("out") String out, @RequestParam("in") String in, @RequestParam("money") Double money) {
+        accountService6.transfer(out, in, money);
+    }
+
     public AccountService getAccountService2() {
         return accountService2;
     }

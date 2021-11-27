@@ -23,7 +23,7 @@
         <property name="idleConnectionTestPeriod" value="${jdbc.c3p0.idleConnectionTestPeriod}"/>
     </bean>-->
     <bean id="dataSource2" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-        <property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+        <property name="url" value="jdbc:oracle:thin:@localhost:1521:XE"/>
         <property name="username" value="scott"/>
         <property name="password"  value="tiger"/>
         <property name="driverClassName"  value="oracle.jdbc.driver.OracleDriver"/>
