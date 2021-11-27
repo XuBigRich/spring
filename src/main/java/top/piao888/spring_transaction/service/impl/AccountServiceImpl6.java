@@ -32,7 +32,7 @@ public class AccountServiceImpl6 implements AccountService {
 
     @Override
     public void transfer(String out, String in, Double money) {
-        //创建一个事物
+        //创建一个事物 DefaultTransactionDefinition 来源于spring
         DefaultTransactionDefinition defaultTransactionDefinition = new DefaultTransactionDefinition();
         //设置事物的隔离级别
         int iso = DefaultTransactionDefinition.ISOLATION_DEFAULT;
@@ -46,17 +46,13 @@ public class AccountServiceImpl6 implements AccountService {
         System.out.println("通过方法取出的隔离级别:" + defaultTransactionDefinition.getIsolationLevel());
         //获取事物的传播行为
         System.out.println("通过方法取出的传播行为:" + defaultTransactionDefinition.getPropagationBehavior());
-
-        //使用事物管理器对事物进行托管管理，获得一个事物相应的状态
+        //使用事物管理器对事物进行托管管理，获得一个事物相应的状态 dataSourceTransactionManager来源于spring
         TransactionStatus transactionStatus = dataSourceTransactionManager.getTransaction(defaultTransactionDefinition);
         try {
             System.out.println("判断事物是否完成1:" + transactionStatus.isCompleted());
-            Account accountList = accountDao.getAccountByName(out);
-            System.out.println(accountList);
+            //执行业务操作
             accountDao.outMoney(out, money);
-            Account accountList1 = accountDao.getAccountByName(out);
-            System.out.println(accountList1);
-//            int i = 1 / 0;            //人工 制造 异常 。  测试 添加事务管理后 是否会 会回滚事务
+            int i = 1 / 0;            //人工 制造 异常 。  测试 添加事务管理后 是否会 会回滚事务
             accountDao.inMoney(in, money);
             //提交
             dataSourceTransactionManager.commit(transactionStatus);
@@ -64,6 +60,7 @@ public class AccountServiceImpl6 implements AccountService {
             //重新获取到一个事物状态
             TransactionStatus transactionStatus1 = dataSourceTransactionManager.getTransaction(defaultTransactionDefinition);
             System.out.println("判断事物是否完成3:" + transactionStatus1.isCompleted());
+            //执行业务操作
             accountDao.inMoney(in, 1d);
             accountDao.inMoney(out, 1d);
             dataSourceTransactionManager.commit(transactionStatus1);
@@ -73,7 +70,6 @@ public class AccountServiceImpl6 implements AccountService {
             //最好是放在catch 里面,防止程序异常而事务一直卡在哪里未提交
             dataSourceTransactionManager.rollback(transactionStatus);
         }
-
     }
 
     public DataSourceTransactionManager getDataSourceTransactionManager() {
